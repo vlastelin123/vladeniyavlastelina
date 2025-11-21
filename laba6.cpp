@@ -4,25 +4,33 @@
 using namespace std;
 
 // Инициализация данных матрицы
-void initializeTable(int** dataTable, int startRows, int startCols, int finalRows, int finalCols, int paramC, int paramD) {
-    // Заполняем начальный блок
-    for (int row = 0; row < startRows; ++row) {
-        for (int col = 0; col < startCols; ++col) {
-            dataTable[row][col] = (-1 + row) * paramC + (1 + col) * paramD;
-        }
+void initializeTable(int** dataTable, int startRows, int startCols, int finalRows, int finalCols, int A, int B, int C, int D) {
+    // Заполняем начальную матрицу
+    dataTable[0][0] = A;
+    dataTable[0][1] = B;
+    dataTable[1][0] = C;
+    dataTable[1][1] = D;
+
+    // Заполняем расширенные столбцы в первой строке
+    for (int col = startCols; col < finalCols; col++) {
+        int i = -1;
+        int j = col - startCols + 1;
+        dataTable[0][col] = i * C + j * D;
     }
 
-    // Заполняем расширенные столбцы в начальных строках
-    for (int row = 0; row < startRows; row++) {
-        for (int col = startCols; col < finalCols; col++) {
-            dataTable[row][col] = (-1 + row) * paramC + (col - startCols + 1) * paramD;
-        }
+    // Заполняем расширенные столбцы во второй строке
+    for (int col = startCols; col < finalCols; col++) {
+        int i = 0;
+        int j = col - startCols + 1;
+        dataTable[1][col] = i * C + j * D;
     }
 
     // Заполняем добавленные строки
     for (int row = startRows; row < finalRows; row++) {
         for (int col = 0; col < finalCols; col++) {
-            dataTable[row][col] = (row - startRows + 1) * paramC + (col - startCols + 1) * paramD;
+            int i = row - startRows + 1;
+            int j = col - startCols + 1;
+            dataTable[row][col] = i * C + j * D;
         }
     }
 }
@@ -88,7 +96,7 @@ void eliminateColumns(int** dataTable, int rowCount, int* colCount, int* emptyCo
 
 // Создание структуры данных
 int** buildDataStructure(int rowCount, int colCount) {
-    int** dataStructure = (int**)realloc(NULL, rowCount * sizeof(int*));
+    int** dataStructure = (int**)malloc(rowCount * sizeof(int*));
 
     for (int i = 0; i < rowCount; i++) {
         dataStructure[i] = (int*)calloc(colCount, sizeof(int));
@@ -107,29 +115,31 @@ void releaseResources(int** dataStructure, int rowCount) {
 
 // Работа с указателями
 void demonstratePointers() {
-    cout << "\nПункт 2: Работа с указателем" << endl;
+    cout << "\nПункт 2: Работа с указателями" << endl;
 
-    double valueOne, valueTwo;
-    cout << "Введите первую переменную: ";
-    cin >> valueOne;
-    cout << "Введите вторую переменную: ";
-    cin >> valueTwo;
+    double a, b;
+    cout << "Введите значение переменной a: ";
+    cin >> a;
+    cout << "Введите значение переменной b: ";
+    cin >> b;
 
-    double* pointerOne = &valueOne;
-    double* pointerTwo = &valueTwo;
+    double* ptrA = &a;
+    double* ptrB = &b;
 
-    cout << "Начальные значения: valueOne = " << valueOne << ", valueTwo = " << valueTwo << endl;
+    cout << "Исходные значения: a = " << a << ", b = " << b << endl;
 
     // Увеличиваем первое значение втрое через указатель
-    *pointerOne = *pointerOne * 3;
-    cout << "После утроения valueOne: valueOne = " << valueOne << ", valueTwo = " << valueTwo << endl;
+    *ptrA = *ptrA * 3;
+    cout << "После увеличения a в 3 раза: a = " << a << ", b = " << b << endl;
 
     // Обмен значениями через указатели
-    double temporary = *pointerOne;
-    *pointerOne = *pointerTwo;
-    *pointerTwo = temporary;
+    double temp = *ptrA;
+    *ptrA = *ptrB;
+    *ptrB = temp;
 
-    cout << "После обмена значений: valueOne = " << valueOne << ", valueTwo = " << valueTwo << endl;
+    cout << "После обмена значений: a = " << a << ", b = " << b << endl;
+    delete ptrA;
+    delete ptrB;
 }
 
 int main() {
@@ -137,76 +147,65 @@ int main() {
     const int initialRowSize = 2;
     const int initialColSize = 2;
 
-    // Создаем базовую матрицу 2 на 2
-    char baseTable[2][2] = {
-        {'A', 'B'},
-        {'C', 'D'}
-    };
-
-    cout << "Базовая матрица 2x2:" << endl;
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            cout << baseTable[i][j] << " ";
-        }
-        cout << endl;
-    }
+    int A, B, C, D;
     
-
-    int A, B;
-    cout << "Введите количество дополнительных строк (A): ";
+    cout << "Введите значения A, B, C, D:" << endl;
+    cout << "A (количество дополнительных строк): ";
     cin >> A;
     while (A < 0) {
-        cout << "Некорректный ввод! Введите неотрицательное значение для A: ";
+        cout << "Ошибка! Введите неотрицательное значение для A: ";
         cin >> A;
     }
 
-    cout << "Введите количество дополнительных столбцов (B): ";
+    cout << "B (количество дополнительных столбцов): ";
     cin >> B;
     while (B < 0) {
-        cout << "Некорректный ввод! Введите неотрицательное значение для B: ";
+        cout << "Ошибка! Введите неотрицательное значение для B: ";
         cin >> B;
     }
 
-    int C, D;
-    cout << "Введите значение C: ";
+    cout << "C: ";
     cin >> C;
-    cout << "Введите значение D: ";
+    cout << "D: ";
     cin >> D;
-    
-    baseTable[0][0] = A;
-    baseTable[0][1] = B;
-    baseTable[1][0] = C;
-    baseTable[1][1] = D;
 
-    int** primaryData = (int**)realloc(NULL, 2 * sizeof(int*));
-    for (int i = 0; i < 2; i++) {
-        primaryData[i] = (int*)calloc(2, sizeof(int));
-    }
-    primaryData[0][0] = A;
-    primaryData[0][1] = B;
-    primaryData[1][0] = C;
-    primaryData[1][1] = D;
+    // Создаем начальную матрицу 2x2 с значениями A, B, C, D
+    cout << "\nНачальная матрица 2x2:" << endl;
+    cout << A << "\t" << B << endl;
+    cout << C << "\t" << D << endl;
 
     int totalRowCount = 2 + A;
     int totalColCount = 2 + B;
 
-    int** mainTable = (int**)realloc(primaryData, totalRowCount * sizeof(int*));
+    // Создаем матрицу 2x2 и расширяем ее
+    int** mainTable = (int**)malloc(2 * sizeof(int*));
+    for (int i = 0; i < 2; i++) {
+        mainTable[i] = (int*)malloc(2 * sizeof(int));
+    }
+    
+    // Заполняем начальные значения
+    mainTable[0][0] = A;
+    mainTable[0][1] = B;
+    mainTable[1][0] = C;
+    mainTable[1][1] = D;
 
-    // Инициализируем новые строки
+    // Расширяем матрицу до нужного размера
+    mainTable = (int**)realloc(mainTable, totalRowCount * sizeof(int*));
     for (int i = 2; i < totalRowCount; i++) {
-        mainTable[i] = (int*)calloc(totalColCount, sizeof(int));
+        mainTable[i] = (int*)malloc(totalColCount * sizeof(int));
     }
 
-    // Изменяем размер существующих строк
+    // Расширяем существующие строки
     for (int i = 0; i < 2; i++) {
         mainTable[i] = (int*)realloc(mainTable[i], totalColCount * sizeof(int));
     }
 
-    // Заполняем матрицу данными
-    initializeTable(mainTable, initialRowSize, initialColSize, totalRowCount, totalColCount, C, D);
+    // Заполняем матрицу данными по правильной формуле
+    initializeTable(mainTable, initialRowSize, initialColSize, totalRowCount, totalColCount, A, B, C, D);
    
-    // Отображаем исходную матрицу
-    cout << "\nИсходная матрица (" << totalRowCount << "x" << totalColCount << "):" << endl;
+    // Отображаем исходную расширенную матрицу
+    cout << "\nРасширенная матрица (" << totalRowCount << "x" << totalColCount << "):" << endl;
+    cout << "A = " << A << " (добавлено строк: " << A << "), B = " << B << " (добавлено столбцов: " << B << ")" << endl;
     for (int i = 0; i < totalRowCount; i++) {
         for (int j = 0; j < totalColCount; j++) {
             cout << mainTable[i][j] << "\t";
@@ -214,27 +213,26 @@ int main() {
         cout << endl;
     }
 
-
-    // Ищем пустые столбцы
+    // Ищем столбцы с нулями
     int emptyColumnCount;
     int* emptyColumns = locateEmptyColumns(mainTable, totalRowCount, totalColCount, &emptyColumnCount);
 
-    cout << "\nОбнаружено пустых столбцов: " << emptyColumnCount << endl;
+    cout << "\nНайдено столбцов с нулями: " << emptyColumnCount << endl;
     if (emptyColumnCount > 0) {
-        cout << "Индексы пустых столбцов: ";
+        cout << "Индексы столбцов с нулями: ";
         for (int i = 0; i < emptyColumnCount; i++) {
             cout << emptyColumns[i] << " ";
         }
         cout << endl;
     }
 
-    // Удаляем пустые столбцы
+    // Удаляем столбцы с нулями
     int currentColumnCount = totalColCount;
     eliminateColumns(mainTable, totalRowCount, &currentColumnCount, emptyColumns, emptyColumnCount);
 
     // Показываем результат
     cout << "\nМатрица после удаления " << emptyColumnCount << " столбцов:" << endl;
-    cout << "Обновленный размер: " << totalRowCount << "x" << currentColumnCount << endl;
+    cout << "Новый размер: " << totalRowCount << "x" << currentColumnCount << endl;
     for (int i = 0; i < totalRowCount; i++) {
         for (int j = 0; j < currentColumnCount; j++) {
             cout << mainTable[i][j] << "\t";
