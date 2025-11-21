@@ -1,251 +1,272 @@
 #include <iostream>
 #include <cstdlib>   
 
-// Функция для заполнения матрицы
-void fillMatrix(int** matrix, int initialRows, int initialCols, int totalRows, int totalCols, int C, int D) {
-    for (int i = 0; i < initialRows; ++i) {
-        for (int j = 0; j < initialCols; ++j) {
-            matrix[i][j] = (-1 + i) * C + (1 + j) * D;
+using namespace std;
+
+// Инициализация данных матрицы
+void initializeTable(int** dataTable, int startRows, int startCols, int finalRows, int finalCols, int paramC, int paramD) {
+    // Заполняем начальный блок
+    for (int row = 0; row < startRows; ++row) {
+        for (int col = 0; col < startCols; ++col) {
+            dataTable[row][col] = (-1 + row) * paramC + (1 + col) * paramD;
         }
     }
 
-    for (int i = 0; i < initialRows; i++) {
-        for (int j = initialCols; j < totalCols; j++) {
-            matrix[i][j] = (-1 + i) * C + (j - initialCols + 1) * D;
+    // Заполняем расширенные столбцы в начальных строках
+    for (int row = 0; row < startRows; row++) {
+        for (int col = startCols; col < finalCols; col++) {
+            dataTable[row][col] = (-1 + row) * paramC + (col - startCols + 1) * paramD;
         }
     }
 
-    for (int i = initialRows; i < totalRows; i++) {
-        for (int j = 0; j < totalCols; j++) {
-            matrix[i][j] = (i - initialRows + 1) * C + (j - initialCols + 1) * D;
+    // Заполняем добавленные строки
+    for (int row = startRows; row < finalRows; row++) {
+        for (int col = 0; col < finalCols; col++) {
+            dataTable[row][col] = (row - startRows + 1) * paramC + (col - startCols + 1) * paramD;
         }
     }
-    
 }
 
-// Функция для поиска столбцов из нулей
-int* findZeroColumns(int** matrix, int rows, int cols, int* zeroCount) {
-    int* zeroIndices = NULL;
-    *zeroCount = 0;
+// Поиск столбцов с нулевыми элементами
+int* locateEmptyColumns(int** dataTable, int rowCount, int colCount, int* emptyCount) {
+    int* emptyColumnIndexes = NULL;
+    *emptyCount = 0;
 
-    for (int j = 0; j < cols; j++) {
-        bool hasZero = false;
-        for (int i = 0; i < rows; i++) {
-            if (matrix[i][j] == 0) {
-                hasZero = true;
+    for (int col = 0; col < colCount; col++) {
+        bool foundZero = false;
+        for (int row = 0; row < rowCount; row++) {
+            if (dataTable[row][col] == 0) {
+                foundZero = true;
                 break;
             }
         }
-        if (hasZero) {
-            zeroIndices = (int*)realloc(zeroIndices, (*zeroCount + 1) * sizeof(int));
-            zeroIndices[*zeroCount] = j;
-            (*zeroCount)++;
+        if (foundZero) {
+            emptyColumnIndexes = (int*)realloc(emptyColumnIndexes, (*emptyCount + 1) * sizeof(int));
+            emptyColumnIndexes[*emptyCount] = col;
+            (*emptyCount)++;
         }
     }
 
-    if (*zeroCount == 0) {
-        free(zeroIndices);
+    if (*emptyCount == 0) {
+        free(emptyColumnIndexes);
         return NULL;
     }
 
-    return zeroIndices;
+    return emptyColumnIndexes;
 }
 
-// Функция для удаления столбцов
-void removeColumnsFromOriginal(int** matrix, int rows, int* cols, int* zeroIndices, int zeroCount) {
-    if (zeroCount == 0 || zeroIndices == NULL) {
+// Удаление отмеченных столбцов
+void eliminateColumns(int** dataTable, int rowCount, int* colCount, int* emptyColumnIndexes, int emptyCount) {
+    if (emptyCount == 0 || emptyColumnIndexes == NULL) {
         return;
     }
 
-    int newCols = *cols - zeroCount;
+    int updatedColCount = *colCount - emptyCount;
 
-    for (int i = 0; i < rows; i++) {
-        int writeIndex = 0;
-        for (int j = 0; j < *cols; j++) {
-            bool isZeroColumn = false;
-            for (int k = 0; k < zeroCount; k++) {
-                if (j == zeroIndices[k]) {
-                    isZeroColumn = true;
+    for (int row = 0; row < rowCount; row++) {
+        int targetIndex = 0;
+        for (int col = 0; col < *colCount; col++) {
+            bool shouldRemove = false;
+            for (int k = 0; k < emptyCount; k++) {
+                if (col == emptyColumnIndexes[k]) {
+                    shouldRemove = true;
                     break;
                 }
             }
-            if (!isZeroColumn) {
-                matrix[i][writeIndex] = matrix[i][j];
-                writeIndex++;
+            if (!shouldRemove) {
+                dataTable[row][targetIndex] = dataTable[row][col];
+                targetIndex++;
             }
         }
-
-
     }
 
-    *cols = newCols;
-    for (int i = 0; i < rows; ++i) {
-        matrix[i] = (int*)realloc(matrix[i], newCols * sizeof(int));
+    *colCount = updatedColCount;
+    for (int row = 0; row < rowCount; ++row) {
+        dataTable[row] = (int*)realloc(dataTable[row], updatedColCount * sizeof(int));
     }
 }
 
-// Функция для создания матрицы
-int** createMatrix(int rows, int cols) {
-    int** matrix = (int**)realloc(NULL, rows * sizeof(int*));
+// Создание структуры данных
+int** buildDataStructure(int rowCount, int colCount) {
+    int** dataStructure = (int**)realloc(NULL, rowCount * sizeof(int*));
 
-    for (int i = 0; i < rows; i++) {
-        matrix[i] = (int*)calloc(cols, sizeof(int));
+    for (int i = 0; i < rowCount; i++) {
+        dataStructure[i] = (int*)calloc(colCount, sizeof(int));
     }
 
-    return matrix;
+    return dataStructure;
 }
 
-// Функция для освобождения памяти
-void freeMatrix(int** matrix, int rows) {
-    for (int i = 0; i < rows; i++) {
-        free(matrix[i]);
+// Освобождение ресурсов
+void releaseResources(int** dataStructure, int rowCount) {
+    for (int i = 0; i < rowCount; i++) {
+        free(dataStructure[i]);
     }
-    free(matrix);
+    free(dataStructure);
 }
-// Функция для работы с указателями
-void pointerOperations() {
-    std::cout << "\nПункт 2: Работа с указателями" << std::endl;
 
-    double a, b;
-    std::cout << "Введите значение переменной a: ";
-    std::cin >> a;
-    std::cout << "Введите значение переменной b: ";
-    std::cin >> b;
+// Демонстрация работы с указателями
+void demonstratePointers() {
+    cout << "\nБлок 2: Демонстрация указателей" << endl;
 
-    double* ptrA = &a;
-    double* ptrB = &b;
+    double valueOne, valueTwo;
+    cout << "Введите первое числовое значение: ";
+    cin >> valueOne;
+    cout << "Введите второе числовое значение: ";
+    cin >> valueTwo;
 
-    std::cout << "Исходные значения: a = " << a << ", b = " << b << std::endl;
+    double* pointerOne = &valueOne;
+    double* pointerTwo = &valueTwo;
 
-    // Увеличиваем значение a в 3 раза через указатель
-    *ptrA = *ptrA * 3;
-    std::cout << "После увеличения a в 3 раза: a = " << a << ", b = " << b << std::endl;
+    cout << "Начальные значения: valueOne = " << valueOne << ", valueTwo = " << valueTwo << endl;
 
-    // Меняем местами значения через указатели
-    double temp = *ptrA;
-    *ptrA = *ptrB;
-    *ptrB = temp;
+    // Увеличиваем первое значение втрое через указатель
+    *pointerOne = *pointerOne * 3;
+    cout << "После утроения valueOne: valueOne = " << valueOne << ", valueTwo = " << valueTwo << endl;
 
-    std::cout << "После обмена значений: a = " << a << ", b = " << b << std::endl;
+    // Обмен значениями через указатели
+    double temporary = *pointerOne;
+    *pointerOne = *pointerTwo;
+    *pointerTwo = temporary;
+
+    cout << "После обмена значений: valueOne = " << valueOne << ", valueTwo = " << valueTwo << endl;
 }
 
 int main() {
     setlocale(LC_ALL, "Russian");
-    const int initialRows = 2;
-    const int initialCols = 2;
+    const int initialRowSize = 2;
+    const int initialColSize = 2;
 
-    // Создаем матрицу 2x2
-    char matrix22[2][2] = {
+    // Создаем базовую матрицу 2 на 2
+    char baseTable[2][2] = {
         {'A', 'B'},
         {'C', 'D'}
     };
 
-    std::cout << "Матрица 2x2:" << std::endl;
+    cout << "Базовая матрица 2x2:" << endl;
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
-            std::cout << matrix22[i][j] << " ";
+            cout << baseTable[i][j] << " ";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
     
 
     int A, B;
-    std::cout << "Введите количество строк для добавления (A): ";
-    std::cin >> A;
+    cout << "Введите количество дополнительных строк (A): ";
+    cin >> A;
     while (A < 0) {
-        std::cout << "Ошибка! Введите неотрицательное значение для A: ";
-        std::cin >> A;
+        cout << "Некорректный ввод! Введите неотрицательное значение для A: ";
+        cin >> A;
     }
 
-    std::cout << "Введите количество столбцов для добавления (B): ";
-    std::cin >> B;
+    cout << "Введите количество дополнительных столбцов (B): ";
+    cin >> B;
     while (B < 0) {
-        std::cout << "Ошибка! Введите неотрицательное значение для B: ";
-        std::cin >> B;
+        cout << "Некорректный ввод! Введите неотрицательное значение для B: ";
+        cin >> B;
     }
 
     int C, D;
-    std::cout << "Введите значение C: ";
-    std::cin >> C;
-    std::cout << "Введите значение D: ";
-    std::cin >> D;
-    matrix22[0][0] = A;
-    matrix22[0][1] = B;
-    matrix22[1][0] = C;
-    matrix22[1][1] = D;
+    cout << "Введите значение C: ";
+    cin >> C;
+    cout << "Введите значение D: ";
+    cin >> D;
+    
+    baseTable[0][0] = A;
+    baseTable[0][1] = B;
+    baseTable[1][0] = C;
+    baseTable[1][1] = D;
 
-    int** M = (int**)realloc(NULL, 2 * sizeof(int*));
+    int** primaryData = (int**)realloc(NULL, 2 * sizeof(int*));
     for (int i = 0; i < 2; i++) {
-        M[i] = (int*)calloc(2, sizeof(int));
+        primaryData[i] = (int*)calloc(2, sizeof(int));
     }
-    M[0][0] = A;
-    M[0][1] = B;
-    M[1][0] = C;
-    M[1][1] = D;
+    primaryData[0][0] = A;
+    primaryData[0][1] = B;
+    primaryData[1][0] = C;
+    primaryData[1][1] = D;
 
-    int totalRows = 2 + A;
-    int totalCols = 2 + B;
+    int totalRowCount = 2 + A;
+    int totalColCount = 2 + B;
 
-    int** matrix = (int**)realloc(M, totalRows * sizeof(int*));
+    int** mainTable = (int**)realloc(primaryData, totalRowCount * sizeof(int*));
 
-    // Инициализируем добавленные строки
-    for (int i = 2; i < totalRows; i++) {
-        matrix[i] = (int*)calloc(totalCols, sizeof(int));
+    // Инициализируем новые строки
+    for (int i = 2; i < totalRowCount; i++) {
+        mainTable[i] = (int*)calloc(totalColCount, sizeof(int));
     }
 
     // Изменяем размер существующих строк
     for (int i = 0; i < 2; i++) {
-        matrix[i] = (int*)realloc(matrix[i], totalCols * sizeof(int));
+        mainTable[i] = (int*)realloc(mainTable[i], totalColCount * sizeof(int));
     }
 
-    // Заполняем матрицу
-    fillMatrix(matrix, initialRows, initialCols, totalRows, totalCols, C, D);
+    // Заполняем матрицу данными
+    initializeTable(mainTable, initialRowSize, initialColSize, totalRowCount, totalColCount, C, D);
    
-    // Выводим исходную матрицу
-    std::cout << "\nИсходная матрица (" << totalRows << "x" << totalCols << "):" << std::endl;
-    for (int i = 0; i < totalRows; i++) {
-        for (int j = 0; j < totalCols; j++) {
-            std::cout << matrix[i][j] << "\t";
+    // Отображаем исходную матрицу
+    cout << "\nИсходная матрица (" << totalRowCount << "x" << totalColCount << "):" << endl;
+    for (int i = 0; i < totalRowCount; i++) {
+        for (int j = 0; j < totalColCount; j++) {
+            cout << mainTable[i][j] << "\t";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
 
 
-    // Поиск нулевых столбцов
-    int zeroCount;
-    int* zeroIndices = findZeroColumns(matrix, totalRows, totalCols, &zeroCount);
+    // Ищем пустые столбцы
+    int emptyColumnCount;
+    int* emptyColumns = locateEmptyColumns(mainTable, totalRowCount, totalColCount, &emptyColumnCount);
 
-    std::cout << "\nНайдено нулевых столбцов: " << zeroCount << std::endl;
-    if (zeroCount > 0) {
-        std::cout << "Индексы нулевых столбцов: ";
-        for (int i = 0; i < zeroCount; i++) {
-            std::cout << zeroIndices[i] << " ";
+    cout << "\nОбнаружено пустых столбцов: " << emptyColumnCount << endl;
+    if (emptyColumnCount > 0) {
+        cout << "Индексы пустых столбцов: ";
+        for (int i = 0; i < emptyColumnCount; i++) {
+            cout << emptyColumns[i] << " ";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
 
-    // Удаление нулевых столбцов
-    int currentCols = totalCols;
-    removeColumnsFromOriginal(matrix, totalRows, &currentCols, zeroIndices, zeroCount);
+    // Удаляем пустые столбцы
+    int currentColumnCount = totalColCount;
+    eliminateColumns(mainTable, totalRowCount, &currentColumnCount, emptyColumns, emptyColumnCount);
 
-    // Вывод результата
-    std::cout << "\nМатрица после удаления " << zeroCount << " столбцов:" << std::endl;
-    std::cout << "Новый размер: " << totalRows << "x" << currentCols << std::endl;
-    for (int i = 0; i < totalRows; i++) {
-        for (int j = 0; j < currentCols; j++) {
-            std::cout << matrix[i][j] << "\t";
+    // Показываем результат
+    cout << "\nМатрица после удаления " << emptyColumnCount << " столбцов:" << endl;
+    cout << "Обновленный размер: " << totalRowCount << "x" << currentColumnCount << endl;
+    for (int i = 0; i < totalRowCount; i++) {
+        for (int j = 0; j < currentColumnCount; j++) {
+            cout << mainTable[i][j] << "\t";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
 
-    // Освобождение памяти
-    if (zeroIndices != NULL) {
-        free(zeroIndices);
+    // Очищаем память
+    if (emptyColumns != NULL) {
+        free(emptyColumns);
     }
-    freeMatrix(matrix, totalRows); // Освобождаем только исходную матрицу
+    releaseResources(mainTable, totalRowCount);
 
     // Работа с указателями
-    pointerOperations();
+    demonstratePointers();
 
+    // Второй пункт
+    cout << "Пункт 2" << endl;
+    double* a = new double;
+    double* b = new double;
+    cout << "Введите значение a: ";
+    cin >> *a;
+    cout << "Введите значение b: ";
+    cin >> *b;
+    *a = *a * 3;
+    double c = *a;
+    *a = *b;
+    *b = c;
+    cout << "Значение переменной a: " << *a << endl;
+    cout << "Значение переменной b: " << *b << endl;
+    delete a;
+    delete b;
+    
     return 0;
 }
