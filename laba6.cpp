@@ -105,14 +105,14 @@ void releaseResources(int** dataStructure, int rowCount) {
     free(dataStructure);
 }
 
-// Демонстрация работы с указателями
+// Работа с указателями
 void demonstratePointers() {
-    cout << "\nБлок 2: Демонстрация указателей" << endl;
+    cout << "\nПункт 2: Работа с указателем" << endl;
 
     double valueOne, valueTwo;
-    cout << "Введите первое числовое значение: ";
+    cout << "Введите первую переменную: ";
     cin >> valueOne;
-    cout << "Введите второе числовое значение: ";
+    cout << "Введите вторую переменную: ";
     cin >> valueTwo;
 
     double* pointerOne = &valueOne;
@@ -251,22 +251,5 @@ int main() {
     // Работа с указателями
     demonstratePointers();
 
-    // Второй пункт
-    cout << "Пункт 2" << endl;
-    double* a = new double;
-    double* b = new double;
-    cout << "Введите значение a: ";
-    cin >> *a;
-    cout << "Введите значение b: ";
-    cin >> *b;
-    *a = *a * 3;
-    double c = *a;
-    *a = *b;
-    *b = c;
-    cout << "Значение переменной a: " << *a << endl;
-    cout << "Значение переменной b: " << *b << endl;
-    delete a;
-    delete b;
-    
     return 0;
 }
